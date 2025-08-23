@@ -1,12 +1,12 @@
 --[[
 
-=====================================================================
-==================== READ THIS BEFORE CONTINUING ====================
-=====================================================================
-========                                    .-----.          ========
-========         .----------------------.   | === |          ========
-========         |.-""""""""""""""""""-.|   |-----|          ========
-========         ||                    ||   | === |          ========
+-- =====================================================================
+-- ==================== READ THIS BEFORE CONTINUING ====================
+-- =====================================================================
+-- ========                                    .-----.          ========
+-- ========         .----------------------.   | === |          ========
+-- ========         |.-""""""""""""""""""-.|   |-----|          ========
+-- ========         ||                    ||   | === |          ========
 ========         ||   KICKSTART.NVIM   ||   |-----|          ========
 ========         ||                    ||   | === |          ========
 ========         ||                    ||   |-----|          ========
@@ -676,6 +676,14 @@ require('lazy').setup({
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       --
+      --  Configure VUE LSP
+
+      local vue_language_server_path = vim.fn.stdpath 'data' .. '/mason/packages/vue-language-server/node_modules/@vue/language-server'
+
+      -- wire vue ts plugin into typescript-language-server
+      local ts_filetypes = { 'typescript', 'javascript', 'typescriptreact', 'javascriptreact', 'vue' }
+      local vue_plugin = { name = '@vue/typescript-plugin', location = vue_language_server_path, languages = { 'vue' }, configNamespace = 'typescript' }
+      --
       --  Add any additional override configuration in the following tables. Available keys are:
       --  - cmd (table): Override the default command used to start the server
       --  - filetypes (table): Override the default list of associated filetypes for the server
@@ -693,7 +701,14 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        ts_ls = {},
+        -- Breaking change in vue lsp 3.x
+        -- ts_ls = {
+        --   filetypes = ts_filetypes,
+        --   init_options = {
+        --     plugins = { vue_plugin },
+        --     maxTsServerMemory = 12288,
+        --   },
+        -- },
         --
 
         lua_ls = {
@@ -710,11 +725,28 @@ require('lazy').setup({
             },
           },
         },
+        vue_ls = {},
         tailwindcss = {},
         bashls = {},
         helm_ls = {},
         jsonls = {},
         yamlls = {},
+        vtsls = {
+          settings = {
+            typescript = {
+              tsserver = {
+                maxTsServerMemory = 12288,
+              },
+            },
+
+            vtsls = {
+              tsserver = {
+                globalPlugins = { vue_plugin },
+              },
+            },
+          },
+          filetypes = ts_filetypes,
+        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -736,19 +768,17 @@ require('lazy').setup({
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
+      -- https://github.com/neovim/nvim-lspconfig
+      for server, config in pairs(servers) do
+        if not vim.tbl_isempty(config) then
+          vim.lsp.config(server, config)
+        end
+      end
+
+      -- right now, we have to enable them
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
+        automatic_enable = true, -- automatically enable servers
       }
     end,
   },
