@@ -83,7 +83,6 @@ I hope you enjoy your Neovim journey,
 
 P.S. You can delete this when you're done too. It's your config now! :)
 --]]
-
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -166,6 +165,11 @@ vim.o.scrolloff = 10
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
+-- Indentation
+vim.o.expandtab = true
+vim.o.tabstop = 2
+vim.o.shiftwidth = 2
+vim.o.softtabstop = 2
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -436,6 +440,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+      vim.keymap.set('n', '<leader>sgs', builtin.git_status, { desc = '[S]earch [G]it Status' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
@@ -734,11 +739,20 @@ require('lazy').setup({
         vtsls = {
           settings = {
             typescript = {
-              tsserver = {
-                maxTsServerMemory = 12288,
+              suggest = { completeFunctionCalls = true },
+              preferences = {
+                includeCompletionsForModuleExports = true,
+                includePackageJsonAutoImports = 'on',
+              },
+              tsserver = { maxTsServerMemory = 12288 },
+            },
+            javascript = {
+              suggest = { completeFunctionCalls = true },
+              preferences = {
+                includeCompletionsForModuleExports = true,
+                includePackageJsonAutoImports = 'on',
               },
             },
-
             vtsls = {
               tsserver = {
                 globalPlugins = { vue_plugin },
@@ -815,7 +829,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        javascript = { 'eslint_d', 'eslint', 'prettier_d', 'prettier', stop_after_first = true },
+        javascript = { 'eslint_d', 'eslint', 'prettier_d', 'prettier', '', stop_after_first = true },
         typescript = { 'eslint_d', 'eslint', 'prettier_d', 'prettier', stop_after_first = true },
         vue = { 'eslint_d', 'eslint', 'prettier_d', 'prettier', stop_after_first = true },
         javascriptreact = { 'eslint_d', 'eslint', 'prettier_d', 'prettier', stop_after_first = true },
@@ -833,6 +847,37 @@ require('lazy').setup({
     config = function()
       require('supermaven-nvim').setup {}
     end,
+  },
+  {
+    'folke/snacks.nvim',
+    priority = 1000,
+    lazy = false,
+    ---@type snacks.Config
+    opts = {
+      -- your configuration comes here
+      -- or leave it empty to use the default settings
+      gitbrowse = { enabled = true },
+      lazygit = { enabled = true },
+    },
+    keys = {
+      -- Other
+
+      {
+        '<leader>gB',
+        function()
+          Snacks.gitbrowse()
+        end,
+        desc = 'Git Browse',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>gg',
+        function()
+          Snacks.lazygit()
+        end,
+        desc = 'Lazygit',
+      },
+    },
   },
   {
     'coder/claudecode.nvim',
@@ -936,7 +981,6 @@ require('lazy').setup({
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
         preset = 'default',
-
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
       },
@@ -975,29 +1019,50 @@ require('lazy').setup({
       signature = { enabled = true },
     },
   },
-
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
+  -- {
+  --   'loctvl842/monokai-pro.nvim',
+  --   priority = 1000,
+  --   config = function()
+  --     require('monokai-pro').setup {
+  --       filter = 'octagon',
+  --     }
+  --   end,
+  -- },
+  {
+    'navarasu/onedark.nvim',
+    priority = 1000, -- make sure to load this before all the other start plugins
     config = function()
-      ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
-        styles = {
-          comments = { italic = false }, -- Disable italics in comments
-        },
+      require('onedark').setup {
+        style = 'darker',
       }
-
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      -- Enable theme
+      require('onedark').load()
     end,
   },
-
+  -- { 'Shatur/neovim-ayu', name = 'ayu', priority = 1000 },
+  -- { 'catppuccin/nvim', name = 'catppuccin', priority = 1000 },
+  -- { -- You can easily change to a different colorscheme.
+  -- Change the name of the colorscheme plugin below, and then
+  -- change the command in the config to whatever the name of that colorscheme is.
+  --
+  -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  --   'folke/tokyonight.nvim',
+  --   priority = 1000, -- Make sure to load this before all the other start plugins.
+  --   config = function()
+  --     ---@diagnostic disable-next-line: missing-fields
+  --     require('tokyonight').setup {
+  --       styles = {
+  --         comments = { italic = false }, -- Disable italics in comments
+  --       },
+  --     }
+  --
+  --     -- Load the colorscheme here.
+  --     -- Like many other themes, this one has different styles, and you could load
+  --     -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+  --     vim.cmd.colorscheme 'tokyonight-night'
+  --   end,
+  -- },
+  --
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
@@ -1111,6 +1176,6 @@ require('lazy').setup({
     },
   },
 })
-
+-- vim.cmd.colorscheme 'ayu-mirage'
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
