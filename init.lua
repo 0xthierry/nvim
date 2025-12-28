@@ -475,9 +475,18 @@ require('lazy').setup({
   },
   {
     'stevearc/oil.nvim',
-    opts = {},
-    dependencies = { 'nvim-tree/nvim-web-devicons' }, -- use if you prefer nvim-web-devicons
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    opts = {
+      win_options = {
+        signcolumn = 'yes:2',
+      },
+    },
     lazy = false,
+  },
+  {
+    'refractalize/oil-git-status.nvim',
+    dependencies = { 'stevearc/oil.nvim' },
+    config = true,
   },
   -- LSP Plugins
   {
